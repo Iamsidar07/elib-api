@@ -9,6 +9,7 @@ const _config = {
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinarySecretKey: process.env.CLOUDINARY_SECRET_KEY,
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  frontendDomain: process.env.FRONTEND_DOMAIN,
 };
 
 // make _config readonly
