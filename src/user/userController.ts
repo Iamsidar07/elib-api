@@ -41,4 +41,30 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   res.status(201).json({ accessToken: token });
 };
 
-export { createUser };
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return next(createHttpError(400, "All fields are required."));
+  }
+  let user: User | null;
+  try {
+    user = await userModal.findOne({ email });
+    if (!user) {
+      return next(createHttpError(404, "User not found."));
+    }
+  } catch (error) {
+    return next(createHttpError(500, "Failed to find user."));
+  }
+
+  const isCorrectPassword = await bcrypt.compare(password, user.password);
+  if (!isCorrectPassword) {
+    return next(createHttpError(400, "Wrong password."));
+  }
+  const accessToken = jwt.sign({ sub: user._id }, config.jwtSecret as string, {
+    expiresIn: "7d",
+  });
+
+  res.status(200).json({ accessToken });
+};
+
+export { createUser, loginUser };
