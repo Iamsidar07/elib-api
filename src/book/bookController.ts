@@ -1,27 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
-import cloudinary from "../config/cloudinary";
 import bookModel from "./bookModel";
-import fs from "fs/promises";
 import { AuthRequest } from "../middlewares/authenticate";
+import { uploadFile } from "../utils/uploadFile";
+import userModal from "../user/userModal";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description, genre } = req.body;
     const files = req.files as { [filename: string]: Express.Multer.File[] };
-    const coverImageFile = files.coverImage[0];
-    const coverImage = await cloudinary.uploader.upload(coverImageFile.path, {
-      filename_override: coverImageFile.filename,
-      format: coverImageFile.mimetype.split("/")[-1],
-      folder: "cover-images",
-    });
-    const file = files.file[0];
-    const uploadedFile = await cloudinary.uploader.upload(file.path, {
-      filename_override: file.filename,
-      format: "pdf",
-      folder: "book-files",
-      resource_type: "raw",
-    });
+    const coverImage = await uploadFile({ fieldName: "coverImage", files });
+    const uploadedFile = await uploadFile({ fieldName: "file", files });
     const _req = req as AuthRequest;
     const newBook = await bookModel.create({
       title,
@@ -32,12 +21,57 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
       coverImage: coverImage.secure_url,
     });
 
-    await fs.unlink(coverImageFile.path);
-    await fs.unlink(file.path);
-
     res.send({ id: newBook._id });
   } catch (error: any) {
     return next(createHttpError(500, error.message));
   }
 };
-export { createBook };
+
+const updateBook = async (req: Request, res: Response, next: NextFunction) => {
+  const { bookId } = req.params;
+  if (!bookId) {
+    return next(createHttpError(400, "Book id is required."));
+  }
+  const { title, description, genre } = req.body;
+  const files = req.files as { [filename: string]: Express.Multer.File[] };
+  try {
+    const book = await bookModel.findById(bookId).populate("author");
+    if (!book) {
+      return next(createHttpError(404, "Book not found."));
+    }
+    const _req = req as AuthRequest;
+
+    if (_req.userId !== book.author._id) {
+      return next(createHttpError(403, "Permission denied."));
+    }
+    let newCoverImageUrl = "";
+    if (files.coverImage) {
+      const updatedCoverImage = await uploadFile({
+        fieldName: "coverImage",
+        files,
+      });
+      newCoverImageUrl = updatedCoverImage.secure_url;
+    }
+    let newFileUrl = "";
+    if (files.file) {
+      const updatedFile = await uploadFile({ fieldName: "file", files });
+      newFileUrl = updatedFile.secure_url;
+    }
+    const updatedBook = await bookModel.findByIdAndUpdate(
+      bookId,
+      {
+        title,
+        description,
+        genre,
+        coverImage: newCoverImageUrl,
+        file: newFileUrl,
+      },
+      { new: true },
+    );
+    res.status(200).json(updatedBook);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+export { createBook, updateBook };
