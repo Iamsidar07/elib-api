@@ -1,24 +1,14 @@
-import express, { Request, Response, NextFunction } from "express";
-import createHttpError, { HttpError } from "http-errors";
-import { config } from "./config/config";
+import express from "express";
+
+import globalErrorHandler from "./middlewares/globalErrorHandler";
+import userRouter from "./user/userRouter";
 
 const app = express();
+app.use(express.json());
 
 // routing
-app.get("/", (req, res, next) => {
-  const error = createHttpError(400, "Something went wrong");
-
-  throw error;
-  res.json({ message: "hello" });
-});
+app.use("/api/users", userRouter);
 
 // global error handler at bottom
-app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
-  const statusCode = error.statusCode || 500;
-  res.status(statusCode).json({
-    message: error.message,
-    errorStack: config.env === "development" ? error.stack : "",
-  });
-});
-
+app.use(globalErrorHandler);
 export default app;

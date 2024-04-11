@@ -5,6 +5,7 @@ const _config = {
   port: process.env.PORT,
   dbUri: process.env.MONGODB_URI,
   env: process.env.NODE_ENV,
+  jwtSecret: process.env.JWT_SECRET
 };
 
 // make _config readonly
