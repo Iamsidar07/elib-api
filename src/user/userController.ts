@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import userModal from "./userModal";
+import userModel from "./userModel";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
 import { User } from "./userTypes";
@@ -15,7 +15,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
   const hashPassword = await bcrypt.hash(password, 10);
   try {
-    const user = await userModal.findOne({
+    const user = await userModel.findOne({
       email,
     });
     if (user) {
@@ -26,7 +26,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
   let newUser: User;
   try {
-    newUser = await userModal.create({
+    newUser = await userModel.create({
       email,
       name,
       password: hashPassword,
@@ -48,7 +48,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   }
   let user: User | null;
   try {
-    user = await userModal.findOne({ email });
+    user = await userModel.findOne({ email });
     if (!user) {
       return next(createHttpError(404, "User not found."));
     }

@@ -3,7 +3,6 @@ import createHttpError from "http-errors";
 import bookModel from "./bookModel";
 import { AuthRequest } from "../middlewares/authenticate";
 import { uploadFile } from "../utils/uploadFile";
-import userModal from "../user/userModal";
 import { LIMIT } from "../config/db";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
