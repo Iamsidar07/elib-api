@@ -73,5 +73,28 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
     return next(err);
   }
 };
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+  const { bookId } = req.params;
+  if (!bookId) {
+    return next(createHttpError(400, "Book id is required."));
+  }
+  try {
+    const book = await bookModel.findById(bookId).populate("author");
+    if (!book) {
+      return next(createHttpError(404, "Book not found."));
+    }
+    const _req = req as AuthRequest;
 
-export { createBook, updateBook };
+    if (_req.userId !== book.author._id) {
+      return next(createHttpError(403, "Permission denied."));
+    }
+    await bookModel.findByIdAndDelete(bookId);
+    res.status(200).json(book);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const listBook = async (req: Request, res: Response, next: NextFunction) => {};
+
+export { createBook, updateBook, listBook, deleteBook };
