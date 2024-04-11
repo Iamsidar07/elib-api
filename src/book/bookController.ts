@@ -106,10 +106,27 @@ const listBooks = async (req: Request, res: Response, next: NextFunction) => {
       .skip(offset)
       .limit(Number(limit))
       .sort({ createdAt: sort === "asc" ? 1 : -1 });
-    res.status(200).json({ result: books });
+    res.status(200).json(books);
   } catch (error) {
     return next(createHttpError(500, "Error occured while fetching books."));
   }
 };
 
-export { createBook, updateBook, listBooks, deleteBook };
+const getSingleBook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { bookId } = req.params;
+    const book = await bookModel.findById(bookId);
+    if (!book) {
+      return next(createHttpError(404, "Book not found."));
+    }
+    res.status(200).json(book);
+  } catch (error) {
+    return next(createHttpError(500, "Erro occured while fetching book."));
+  }
+};
+
+export { createBook, updateBook, listBooks, deleteBook, getSingleBook };
