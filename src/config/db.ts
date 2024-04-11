@@ -11,7 +11,7 @@ export const dbConnect = async () => {
     });
     await mongoose.connect(config.dbUri as string);
   } catch (error) {
-    console.log("Failed to make connection to the db.");
+    console.log("Failed to make connection to the db.", error);
     process.exit(1);
   }
 };
