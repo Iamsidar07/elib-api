@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import userModal from "./userModal";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
+import { User } from "./userTypes";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
@@ -13,19 +14,27 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
-  const user = await userModal.findOne({
-    email,
-  });
-  if (user) {
-    res
-      .status(400)
-      .json({ message: "User is allready exist with this email." });
+  try {
+    const user = await userModal.findOne({
+      email,
+    });
+    if (user) {
+      return next(createHttpError(400, "User allready exist with this email."));
+    }
+  } catch (error) {
+    return next(createHttpError(500, "Failed to get user."));
   }
-  const newUser = await userModal.create({
-    email,
-    name,
-    password: hashPassword,
-  });
+  let newUser: User;
+  try {
+    newUser = await userModal.create({
+      email,
+      name,
+      password: hashPassword,
+    });
+  } catch (error) {
+    return next(createHttpError(500, "Failed to create user."));
+  }
+
   const token = jwt.sign({ sub: newUser._id }, config.jwtSecret as string, {
     expiresIn: "7d",
   });
