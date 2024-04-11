@@ -15,3 +15,5 @@ export const dbConnect = async () => {
     process.exit(1);
   }
 };
+
+export const LIMIT = 10;

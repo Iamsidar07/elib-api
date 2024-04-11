@@ -4,6 +4,7 @@ import bookModel from "./bookModel";
 import { AuthRequest } from "../middlewares/authenticate";
 import { uploadFile } from "../utils/uploadFile";
 import userModal from "../user/userModal";
+import { LIMIT } from "../config/db";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -95,6 +96,20 @@ const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const listBook = async (req: Request, res: Response, next: NextFunction) => {};
+const listBooks = async (req: Request, res: Response, next: NextFunction) => {
+  const { limit = LIMIT, page = 1, sort = "asc" } = req.query;
+  const offset = (Number(page) - 1) * Number(limit);
+  try {
+    const books = await bookModel
+      .find({})
+      .populate("author")
+      .skip(offset)
+      .limit(Number(limit))
+      .sort({ createdAt: sort === "asc" ? 1 : -1 });
+    res.status(200).json({ result: books });
+  } catch (error) {
+    return next(createHttpError(500, "Error occured while fetching books."));
+  }
+};
 
-export { createBook, updateBook, listBook, deleteBook };
+export { createBook, updateBook, listBooks, deleteBook };
