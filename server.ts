@@ -1,6 +1,7 @@
-import { config } from "./config/config";
-import { dbConnect } from "./config/db";
-import app from "./app";
+import app from "./src/app";
+import { config } from "./src/config/config";
+import { dbConnect } from "./src/config/db";
+
 const startSever = () => {
   const PORT = config.port || 3000;
   dbConnect();
@@ -8,4 +9,3 @@ const startSever = () => {
 };
 
 startSever();
-
